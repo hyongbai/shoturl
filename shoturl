@@ -1,0 +1,26 @@
+#!/bin/bash
+#curl "http://api.t.sina.com.cn/short_url/shorten.json?source=1738872127&url_long=http://www.cnblogs.com/e241138"
+#APP_KEY="1738872127"
+APP_KEY="2483680040"
+#TODO check http://
+if [ $1 ]; then
+    #remove http://
+    longurl=`echo "$1" | sed 's/^http:\/\///'`
+    #sina shorten url api
+    API_ADDR="http://api.t.sina.com.cn/short_url/shorten.json?source=$APP_KEY&url_long=http://$longurl"
+    #get result from sina shorten url api
+    result=`curl "$API_ADDR" 2>/dev/null`
+    #get shorten url from result
+    shorturl=`echo $result|awk -F\" '{print $4}'`
+    echo
+    echo
+    echo "----------------------------------------------------------"
+    echo
+    echo -e "               \033[;33;1m$shorturl\033[0m"
+    echo
+    echo "----------------------------------------------------------"
+    echo 
+else
+    echo "PLEASE INPUT URL"
+fi
+
