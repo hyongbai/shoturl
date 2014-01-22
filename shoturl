@@ -1,6 +1,4 @@
 #!/bin/bash
-#curl "http://api.t.sina.com.cn/short_url/shorten.json?source=1738872127&url_long=http://www.cnblogs.com/e241138"
-#APP_KEY="1738872127"
 APP_KEY="2483680040"
 #TODO check http://
 if [ $1 ]; then
