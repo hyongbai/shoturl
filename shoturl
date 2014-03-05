@@ -1,23 +1,54 @@
 #!/bin/bash
-APP_KEY="2483680040"
 #TODO check http://
+
+function    sina_short()
+{
+    if [ $1 ]; then
+        APP_KEY="2483680040"
+        #sina shorten url api
+        API_ADDR="http://api.t.sina.com.cn/short_url/shorten.json?source=$APP_KEY&url_long=http://$1"
+        #get result from sina shorten url api
+        result=`curl "$API_ADDR" 2>/dev/null`
+        #get shorten url from result
+        shorturl=`echo $result|awk -F\" '{print $4}'`
+        echo $shorturl
+    fi
+}
+
+function    baidu_short()
+{
+    if [ $1 ]; then
+        result=`curl dwz.cn/create.php -d "url=$1" 2>/dev/null`
+        shorturl=`echo $result|awk -F\" '{print $4}'`
+        echo $shorturl
+    fi
+}
+
+function    google_short()
+{
+    if [ $1 ]; then
+        result=`curl https://www.googleapis.com/urlshortener/v1/url -H 'Content-Type: application/json' -d '{"longUrl": "$1"}' 2>/dev/null`
+        shorturl=`echo $result | grep id | grep http | grep goo.gl | awk -F\" '{print $4}'`
+        echo $shorturl
+    fi
+}
+
+
 if [ $1 ]; then
     #remove http://
     longurl=`echo "$1" | sed 's/^http:\/\///'`
-    #sina shorten url api
-    API_ADDR="http://api.t.sina.com.cn/short_url/shorten.json?source=$APP_KEY&url_long=http://$longurl"
-    #get result from sina shorten url api
-    result=`curl "$API_ADDR" 2>/dev/null`
-    #get shorten url from result
-    shorturl=`echo $result|awk -F\" '{print $4}'`
-    echo
+    
+    sina=`sina_short      $longurl`
+    bd=`baidu_short     $longurl`
+    google=`google_short $longurl`
     echo
     echo "----------------------------------------------------------"
-    echo
-    echo -e "               \033[;33;1m$shorturl\033[0m"
-    echo
+    echo -e "sina        \033[;33;1m$sina\033[0m"
+    echo -e "baidu       \033[;33;1m$bd\033[0m"
+    echo -e "google      \033[;33;1m$google\033[0m"
     echo "----------------------------------------------------------"
     echo 
+    echo
 else
     echo "PLEASE INPUT URL"
 fi
