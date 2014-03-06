@@ -3,7 +3,11 @@ shoturl
 
 This is a public repo for user to shorten a long url.
 
-Just sina shorten url is supported up to now.
+update note:
+
+    01/22/14  Just sina shorten url is supported up to now.
+    03/05/14  add support of baidu and google 
+
 
 Before using:
 
