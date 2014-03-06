@@ -26,10 +26,10 @@ Usage:
 
 Thanks for using 
 
-weibo:      @hyongbai
+weibo:     <a href="http://weibo.com/hyongbai" target="_blank">@hyongbai</a>
 
-twitter:    @hyongbai
+twitter:   <a href="http://twitter.com/hyongbai" target="_blank">@hyongbai</a>
 
-gmail:      @hyongbai
+gmail:     <a href="mailto:hyongbai@gmail.com" target="_blank">@hyongbai</a>
 
 
