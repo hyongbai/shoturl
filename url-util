@@ -1,0 +1,14 @@
+#!/bin/bash
+#alias urlencodee='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])"'
+#alias urldecodee='python -c "import sys, urllib as ul; print ul.unquote_plus(sys.argv[1])"'
+
+function urlencode()
+{
+    echo `python -c "import sys, urllib as ul; print ul.quote_plus('$1')"`
+}
+
+function urldecode()
+{
+        echo `python -c "import sys, urllib as ul; print ul.unquote_plus('$1')"`
+}
+
