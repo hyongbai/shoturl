@@ -1,18 +1,42 @@
 #!/bin/bash
-#TODO check http://
+
+urlencode() {
+    # urlencode <string>
+ 
+    local length="${#1}"
+    for (( i = 0; i < length; i++ )); do
+        local c="${1:i:1}"
+        case $c in
+            [a-zA-Z0-9.~_-]) printf "$c" ;;
+            *) printf '%%%02X' "'$c"
+        esac
+    done
+}
+
+urldecode() {
+    # urldecode <string>
+    local url_encoded="${1//+/ }"
+    printf '%b' "${url_encoded//%/\x}"
+}
 
 function    sina_short()
 {
-    if [ $1 ]; then
-        APP_KEY="2483680040"
-        #sina shorten url api
-        API_ADDR="http://api.t.sina.com.cn/short_url/shorten.json?source=$APP_KEY&url_long=http://$1"
-        #get result from sina shorten url api
-        result=`curl "$API_ADDR" 2>/dev/null`
-        #get shorten url from result
-        shorturl=`echo $result|awk -F\" '{print $4}'`
-        echo $shorturl
+    tURL=$1
+    if [ ! $tURL ]; then
+        return
     fi
+
+    SINA_APP_KEY="2483680040"
+    #sina shorten url api
+    API_ADDR="http://api.t.sina.com.cn/short_url/shorten.json?source=$SINA_APP_KEY&url_long=${tURL}"
+    
+    #get result from sina shorten url api
+    result=`curl "$API_ADDR" 2>/dev/null`
+    
+    #get shorten url from result
+    shorturl=`echo $result|awk -F\" '{print $4}'`
+
+    echo "$shorturl"
 }
 
 function    baidu_short()
@@ -20,7 +44,10 @@ function    baidu_short()
     if [ $1 ]; then
         result=`curl dwz.cn/create.php -d "url=$1" 2>/dev/null`
         shorturl=`echo $result|awk -F\" '{print $4}'`
-        echo $shorturl
+        shorturl=${shorturl/\///}
+        # change "\/" to "/"
+        REPL="\\\/"
+        echo ${shorturl//$REPL//}
     fi
 }
 
@@ -33,23 +60,78 @@ function    google_short()
     fi
 }
 
+function    get_protocol()
+{
+    tURL=$1
+    echo "${tURL%://*}"
+}
 
-if [ $1 ]; then
-    #remove http://
-    longurl=`echo "$1" | sed 's/^http:\/\///'`
-    
-    sina=`sina_short      $longurl`
-    bd=`baidu_short     $longurl`
-    google=`google_short $longurl`
-    echo
-    echo "----------------------------------------------------------"
-    echo -e "sina        \033[;33;1m$sina\033[0m"
-    echo -e "baidu       \033[;33;1m$bd\033[0m"
-    echo -e "google      \033[;33;1m$google\033[0m"
-    echo "----------------------------------------------------------"
-    echo 
-    echo
-else
-    echo "PLEASE INPUT URL"
+function    get_net_addr()
+{
+    tURL=$1
+    echo "${tURL#*://}"
+}
+
+function    colorize()
+{
+    echo -e "\033[;33;1m${1}\033[0m"
+}
+
+function optimize_url()
+{
+    tURL=$1
+    NET_ADDR=`get_net_addr $tURL`
+    PROTOCOL=`get_protocol "$tURL"`
+
+    if [ $PROTOCOL != "https" ] && [ $PROTOCOL != "http" ]; then
+        PROTOCOL="http"
+    fi
+
+    echo "`urlencode "${PROTOCOL}://${NET_ADDR}"`"
+}
+
+###################
+## functions END ##
+###################
+
+URL=$1
+if [ ! $URL ]; then
+    echo "Pls input an url"
+    exit
 fi
+URL=`optimize_url "$URL"`
+
+# echo $PROTOCOL
+# echo $NET_ADDR
+# echo $LONGURL
+
+###################
+##   init  END   ##
+###################
+
+echo
+echo "----------------------------------------------------------"
+echo "| "
+# shorten by sina
+echo "| shortening by sina"
+SINA=`sina_short "$URL"`
+SINA=`get_net_addr $SINA`
+echo "| sina        `colorize $SINA`"
+echo "| "
+
+# shorten by baidu
+echo "| shortening by baidu"
+BAIDU=`baidu_short "$URL"`
+BAIDU=`get_net_addr $BAIDU`
+echo "| baidu       `colorize $BAIDU`"
+echo "| "
+
+# shorten by google
+# echo "| shortening by google"
+# GOOG=`google_short "$URL"`
+# GOOG=`get_net_addr $GOOG`
+# echo "|google      `colorize $GOOG`"
+echo "| "
+echo "----------------------------------------------------------"
+echo
 
