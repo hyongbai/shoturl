@@ -1,8 +1,6 @@
 #!/bin/bash
 
 urlencode() {
-    # urlencode <string>
- 
     local length="${#1}"
     for (( i = 0; i < length; i++ )); do
         local c="${1:i:1}"
@@ -25,7 +23,6 @@ function    sina_short()
     if [ ! $tURL ]; then
         return
     fi
-
     SINA_APP_KEY="2483680040"
     #sina shorten url api
     API_ADDR="http://api.t.sina.com.cn/short_url/shorten.json?source=$SINA_APP_KEY&url_long=${tURL}"
@@ -45,9 +42,7 @@ function    baidu_short()
         result=`curl dwz.cn/create.php -d "url=$1" 2>/dev/null`
         shorturl=`echo $result|awk -F\" '{print $4}'`
         shorturl=${shorturl/\///}
-        # change "\/" to "/"
-        REPL="\\\/"
-        echo ${shorturl//$REPL//}
+        echo `escape_char "$shorturl"`
     fi
 }
 
@@ -58,6 +53,18 @@ function    google_short()
         shorturl=`echo $result | grep id | grep http | grep goo.gl | awk -F\" '{print $4}'`
         echo $shorturl
     fi
+}
+
+function    bitly_short()
+{
+    tURL=$1
+    if [ ! $tURL ]; then
+        return
+    fi
+    BITLY_ACCESS_TOKEN="4931d54354f59833167e7976f9a372baf72224a3"
+    result=`curl --connect-timeout $CONNECT_TIMEOUT  "https://api-ssl.bitly.com/v3/shorten?access_token=${BITLY_ACCESS_TOKEN}&longUrl=${tURL}" 2> /dev/null`
+    result=`escape_char $result`
+    echo $result  | awk -F\"url\": '{print $2}' | awk -F\" '{print $2}'
 }
 
 function    get_protocol()
@@ -90,6 +97,24 @@ function optimize_url()
     echo "`urlencode "${PROTOCOL}://${NET_ADDR}"`"
 }
 
+function    escape_char()
+{
+    OLD_CHAR=$1
+    if [ ! $OLD_CHAR ]; then
+        return
+    fi
+    echo ${OLD_CHAR//\\\///}
+}
+
+function    get_ctrl()
+{
+    if [ `uname` == "Darwin" ]; then
+        echo "⌘"
+    else
+        echo "Ctrl"
+    fi
+}
+
 ###################
 ## functions END ##
 ###################
@@ -100,10 +125,10 @@ if [ ! $URL ]; then
     exit
 fi
 URL=`optimize_url "$URL"`
-
+CONNECT_TIMEOUT=50
 # echo $PROTOCOL
 # echo $NET_ADDR
-# echo $LONGURL
+# echo $URL
 
 ###################
 ##   init  END   ##
@@ -112,18 +137,30 @@ URL=`optimize_url "$URL"`
 echo
 echo "----------------------------------------------------------"
 echo "| "
+echo "|     long press `get_ctrl` and double click url to jump to browser"
+echo "| "
 # shorten by sina
 echo "| shortening by sina"
+echo "| "
 SINA=`sina_short "$URL"`
 SINA=`get_net_addr $SINA`
-echo "| sina        `colorize $SINA`"
+echo "|        `colorize $SINA`"
 echo "| "
 
 # shorten by baidu
 echo "| shortening by baidu"
+echo "| "
 BAIDU=`baidu_short "$URL"`
 BAIDU=`get_net_addr $BAIDU`
-echo "| baidu       `colorize $BAIDU`"
+echo "|       `colorize $BAIDU`"
+echo "| "
+
+# shorten by bitly
+echo "| shortening by bitly"
+echo "| "
+BITLY=`bitly_short "$URL"`
+BITLY=`get_net_addr $BITLY`
+echo "|      `colorize $BITLY`"
 echo "| "
 
 # shorten by google
@@ -131,7 +168,7 @@ echo "| "
 # GOOG=`google_short "$URL"`
 # GOOG=`get_net_addr $GOOG`
 # echo "|google      `colorize $GOOG`"
-echo "| "
+# echo "| "
 echo "----------------------------------------------------------"
 echo
 
