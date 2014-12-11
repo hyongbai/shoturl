@@ -3,7 +3,11 @@ shoturl
 
 This is a public repo for user to shorten a long url.
 
-Just sina shorten url is supported up to now.
+update note:
+
+    01/22/14  Just sina shorten url is supported up to now.
+    03/05/14  add support of baidu and google 
+
 
 Before using:
 
@@ -22,10 +26,10 @@ Usage:
 
 Thanks for using 
 
-weibo:      @hyongbai
+weibo:     <a href="http://weibo.com/hyongbai" target="_blank">@hyongbai</a>
 
-twitter:    @hyongbai
+twitter:   <a href="http://twitter.com/hyongbai" target="_blank">@hyongbai</a>
 
-gmail:      @hyongbai
+gmail:     <a href="mailto:hyongbai@gmail.com" target="_blank">@hyongbai</a>
 
 

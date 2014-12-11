@@ -48,9 +48,10 @@ function    baidu_short()
 
 function    google_short()
 {
-    if [ $1 ]; then
-        result=`curl https://www.googleapis.com/urlshortener/v1/url -H 'Content-Type: application/json' -d '{"longUrl": "$1"}' 2>/dev/null`
-        shorturl=`echo $result | grep id | grep http | grep goo.gl | awk -F\" '{print $4}'`
+    if [ $1 ]; then  
+        param="{\"longUrl\": \"$1\"}"
+        result=`curl   https://www.googleapis.com/urlshortener/v1/url -H 'Content-Type: application/json' -d "$param" 2>/dev/null`
+        shorturl=`echo $result | grep "\"id\"\:" | awk -F"\"id\"\:" '{print $2}' | awk -F"\," '{print $1}' | awk -F"\"" '{print $2}'`
         echo $shorturl
     fi
 }
@@ -69,14 +70,14 @@ function    bitly_short()
 
 function    get_protocol()
 {
-    tURL=$1
-    echo "${tURL%://*}"
+    GET_PROTOCOL_URL=$1
+    echo "${GET_PROTOCOL_URL%://*}"
 }
 
 function    get_net_addr()
 {
-    tURL=$1
-    echo "${tURL#*://}"
+    GET_NET_ADDR_URL=$1
+    echo "${GET_NET_ADDR_URL#*://}"
 }
 
 function    colorize()
@@ -86,9 +87,9 @@ function    colorize()
 
 function optimize_url()
 {
-    tURL=$1
-    NET_ADDR=`get_net_addr $tURL`
-    PROTOCOL=`get_protocol "$tURL"`
+    OPTIMIZE_URL="$1"
+    NET_ADDR=`get_net_addr "$OPTIMIZE_URL"`
+    PROTOCOL=`get_protocol "$OPTIMIZE_URL"`
 
     if [ $PROTOCOL != "https" ] && [ $PROTOCOL != "http" ]; then
         PROTOCOL="http"
@@ -124,20 +125,21 @@ if [ ! $URL ]; then
     echo "Pls input an url"
     exit
 fi
+
+# optimize_url "$URL"
+# exit
+
 URL=`optimize_url "$URL"`
 CONNECT_TIMEOUT=50
-# echo $PROTOCOL
-# echo $NET_ADDR
-# echo $URL
-
 ###################
 ##   init  END   ##
 ###################
 
 echo
-echo "----------------------------------------------------------"
+echo "------------------------------------------------------------------------------"
+echo "| Using shoturl \"{URL ADDRESS}\" instead of shoturl {URL ADDRESS} is better"
 echo "| "
-echo "|     long press `get_ctrl` and double click url to jump to browser"
+echo "|     long press `get_ctrl` and double click url to browser"
 echo "| "
 # shorten by sina
 echo "| shortening by sina"
@@ -169,6 +171,8 @@ echo "| "
 # GOOG=`get_net_addr $GOOG`
 # echo "|google      `colorize $GOOG`"
 # echo "| "
-echo "----------------------------------------------------------"
+echo "------------------------------------------------------------------------------Ï
 echo
+
+
 
