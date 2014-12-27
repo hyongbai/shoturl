@@ -1,6 +1,11 @@
 #!/bin/bash
+# author: mailto:hyongbai@gmail.com
+# github: https://github.com/hyongbai/shoturl
 
-urlencode() {
+#This may expired
+BITLY_ACCESS_TOKEN="b5b243586d57e7b322bed06b15ef1f9042ebf19f"
+
+function    urlencode() {
     local length="${#1}"
     for (( i = 0; i < length; i++ )); do
         local c="${1:i:1}"
@@ -11,61 +16,10 @@ urlencode() {
     done
 }
 
-urldecode() {
+function    urldecode() {
     # urldecode <string>
     local url_encoded="${1//+/ }"
     printf '%b' "${url_encoded//%/\x}"
-}
-
-function    sina_short()
-{
-    tURL=$1
-    if [ ! $tURL ]; then
-        return
-    fi
-    SINA_APP_KEY="2483680040"
-    #sina shorten url api
-    API_ADDR="http://api.t.sina.com.cn/short_url/shorten.json?source=$SINA_APP_KEY&url_long=${tURL}"
-    
-    #get result from sina shorten url api
-    result=`curl "$API_ADDR" 2>/dev/null`
-    
-    #get shorten url from result
-    shorturl=`echo $result|awk -F\" '{print $4}'`
-
-    echo "$shorturl"
-}
-
-function    baidu_short()
-{
-    if [ $1 ]; then
-        result=`curl dwz.cn/create.php -d "url=$1" 2>/dev/null`
-        shorturl=`echo $result|awk -F\" '{print $4}'`
-        shorturl=${shorturl/\///}
-        echo `escape_char "$shorturl"`
-    fi
-}
-
-function    google_short()
-{
-    if [ $1 ]; then  
-        param="{\"longUrl\": \"$1\"}"
-        result=`curl   https://www.googleapis.com/urlshortener/v1/url -H 'Content-Type: application/json' -d "$param" 2>/dev/null`
-        shorturl=`echo $result | grep "\"id\"\:" | awk -F"\"id\"\:" '{print $2}' | awk -F"\," '{print $1}' | awk -F"\"" '{print $2}'`
-        echo $shorturl
-    fi
-}
-
-function    bitly_short()
-{
-    tURL=$1
-    if [ ! $tURL ]; then
-        return
-    fi
-    BITLY_ACCESS_TOKEN="4931d54354f59833167e7976f9a372baf72224a3"
-    result=`curl --connect-timeout $CONNECT_TIMEOUT  "https://api-ssl.bitly.com/v3/shorten?access_token=${BITLY_ACCESS_TOKEN}&longUrl=${tURL}" 2> /dev/null`
-    result=`escape_char $result`
-    echo $result  | awk -F\"url\": '{print $2}' | awk -F\" '{print $2}'
 }
 
 function    get_protocol()
@@ -85,7 +39,7 @@ function    colorize()
     echo -e "\033[;33;1m${1}\033[0m"
 }
 
-function optimize_url()
+function    optimize_url()
 {
     OPTIMIZE_URL="$1"
     NET_ADDR=`get_net_addr "$OPTIMIZE_URL"`
@@ -98,10 +52,18 @@ function optimize_url()
     echo "`urlencode "${PROTOCOL}://${NET_ADDR}"`"
 }
 
-function    escape_char()
+function    curl_net()
+{
+    CURL_NET_URL="$1"
+    # echo "CURL_NET_URL=${CURL_NET_URL}"
+    # echo "---------------curl_net--------------"
+    echo `curl --connect-timeout ${CONNECT_TIMEOUT}   ${CURL_NET_URL} 2>/dev/null`
+}
+
+function    escape_slash_char()
 {
     OLD_CHAR=$1
-    if [ ! $OLD_CHAR ]; then
+    if [ ! "${OLD_CHAR}" ]; then
         return
     fi
     echo ${OLD_CHAR//\\\///}
@@ -114,6 +76,70 @@ function    get_ctrl()
     else
         echo "Ctrl"
     fi
+}
+
+function    sina_short()
+{
+    tURL=$1
+    if [ ! $tURL ]; then
+        return
+    fi
+    SINA_APP_KEY="2483680040"
+    SINA_RESULT=`curl_net "http://api.t.sina.com.cn/short_url/shorten.json?source=${SINA_APP_KEY}&url_long=${tURL}"`
+    SINA_RESULT=`echo $SINA_RESULT|awk -F\" '{print $4}'`
+    echo "$SINA_RESULT"
+}
+
+function    baidu_short()
+{
+    tURL="$1"
+    if [ ! "${tURL}" ]; then
+        return
+    fi
+    BAIDU_SHORTURL=`curl_net "dwz.cn/create.php -d url=${tURL}"`
+    BAIDU_SHORTURL=`echo ${BAIDU_SHORTURL}|awk -F\" '{print $4}'`
+    BAIDU_SHORTURL=`escape_slash_char "${BAIDU_SHORTURL}"`
+    echo $BAIDU_SHORTURL 
+}
+
+#goo.gl/N0xziz
+function    google_short()
+{
+    tURL="$1"
+    if [ ! "${tURL}" ]; then
+        return
+    fi
+    param="{\"longUrl\": \"$1\"}"
+    GOOGLE_RESULT=`curl https://www.googleapis.com/urlshortener/v1/url -H 'Content-Type: application/json' -d "${param}" 2>/dev/null`
+    GOOGLE_RESULT=`echo $GOOGLE_RESULT | grep "\"id\"\:" | awk -F"\"id\"\:" '{print $2}' | awk -F"\," '{print $1}' | awk -F"\"" '{print $2}'`
+    echo $GOOGLE_RESULT
+}
+
+
+
+function    bitly_base_short()
+{
+    DOMAIN="$1"
+    tURL="$2"
+    if [ ! "${tURL}" ]; then
+        return
+    fi
+    BITLY_API_URL="https://api-ssl.bitly.com/v3/shorten?format=json"
+    BITLY_RESULT=`curl_net "${BITLY_API_URL}&domain=${DOMAIN}&access_token=${BITLY_ACCESS_TOKEN}&longUrl=${tURL}"`
+    BITLY_RESULT=`echo ${BITLY_RESULT}| awk -F\"url\": '{print $2}'|awk -F\" '{print $2}'`
+    echo "`escape_slash_char $BITLY_RESULT`"
+}
+
+function    bitly_short()
+{
+    # BITLY_RESULT=`curl_net  "https://api-ssl.bitly.com/v3/shorten?access_token=${BITLY_ACCESS_TOKEN}&longUrl=${tURL}"`
+    # # BITLY_RESULT='{ "status_code": 200, "status_txt": "OK", "data": { "long_url": "http:\/\/google.com\/", "url": "http:\/\/bit.ly\/1vGnpCA", "hash": "1vGnpCA", "global_hash": "LmvF", "new_hash": 0 } }'
+    echo "`bitly_base_short "bit.ly" "$1"`"
+}
+
+function    jmp_short()
+{
+    echo "`bitly_base_short "j.mp" "$1"`"
 }
 
 ###################
@@ -137,42 +163,39 @@ CONNECT_TIMEOUT=50
 
 echo
 echo "------------------------------------------------------------------------------"
-echo "| Using shoturl \"{URL ADDRESS}\" instead of shoturl {URL ADDRESS} is better"
-echo "| "
-echo "|     long press `get_ctrl` and double click url to browser"
-echo "| "
-# shorten by sina
-echo "| shortening by sina"
-echo "| "
-SINA=`sina_short "$URL"`
-SINA=`get_net_addr $SINA`
-echo "|        `colorize $SINA`"
-echo "| "
-
-# shorten by baidu
-echo "| shortening by baidu"
-echo "| "
-BAIDU=`baidu_short "$URL"`
-BAIDU=`get_net_addr $BAIDU`
-echo "|       `colorize $BAIDU`"
-echo "| "
-
-# shorten by bitly
-echo "| shortening by bitly"
-echo "| "
-BITLY=`bitly_short "$URL"`
-BITLY=`get_net_addr $BITLY`
-echo "|      `colorize $BITLY`"
-echo "| "
-
-# shorten by google
-# echo "| shortening by google"
-# GOOG=`google_short "$URL"`
-# GOOG=`get_net_addr $GOOG`
-# echo "|google      `colorize $GOOG`"
-# echo "| "
-echo "------------------------------------------------------------------------------Ï
 echo
-
-
-
+echo "Using shoturl \"{URL ADDRESS}\" instead of shoturl {URL ADDRESS} is better"
+echo
+echo "    long press `get_ctrl` and double click url to browser"
+echo
+# shorten by sina
+echo "shortening by sina"
+echo
+SINA=`sina_short "$URL"`
+echo "        `colorize $SINA`"
+echo
+# shorten by baidu
+echo "shortening by baidu"
+echo
+BAIDU=`baidu_short "$URL"`
+echo "        `colorize $BAIDU`"
+echo
+# shorten by bitly
+echo "shortening by bitly"
+echo
+BITLY=`bitly_short "$URL"`
+echo "        `colorize $BITLY`"
+echo
+# shorten by j.mp
+echo "shortening by j.mp"
+echo
+BITLY=`jmp_short "$URL"`
+echo "        `colorize $BITLY`"
+echo
+# shorten by google
+echo "shortening by google"
+GOOG=`google_short "$URL"`
+echo "google      `colorize $GOOG`"
+echo
+echo "------------------------------------------------------------------------------"
+echo

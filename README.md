@@ -1,35 +1,41 @@
-shoturl
+shoturl (not shortenurl or shorturl)
 =======
 
-This is a public repo for user to shorten a long url.
+This is a public project for shortening a long url.Currently sina/baidu/bit.ly/j.mp is supported.For some reason goo.gl can't use(timed out).
 
-update note:
+#### update note:
 
-    01/22/14  Just sina shorten url is supported up to now.
-    03/05/14  add support of baidu and google 
+>`12/28/14`  add support of j.mp
 
+>`03/05/14`  add support of dwz.cn and goo.gl 
 
-Before using:
-
-    chmod +x shoturl
-    
-        
-    #pwd is the abs path of shoturl
-    echo PATH=$PATH:(pwd) >> ~/.bashrc
-
-Usage:
-
-    shoturl http://www.google.com (or shoturl www.google.com)
-
-    >>>>result:http://t.cn/h51yw
+>`01/22/14`  Just t.cn shorten url is supported up to now.
 
 
-Thanks for using 
+#### Before using:
 
-weibo:     <a href="http://weibo.com/hyongbai" target="_blank">@hyongbai</a>
+```shell
 
-twitter:   <a href="http://twitter.com/hyongbai" target="_blank">@hyongbai</a>
+chmod +x shoturl 
 
-gmail:     <a href="mailto:hyongbai@gmail.com" target="_blank">@hyongbai</a>
+${PWD} is the abs path of shoturl
 
+echo PATH=$PATH:${PWD} >> ~/.bashrc
+```
+
+#### Usage:
+
+>shoturl "google.com" (or shoturl "http://google.com")
+
+>![image](img/shoturl.png)
+
+
+
+#### Thanks for using 
+
+>twitter:[@hyongbai](http://twitter.com/hyongbai)
+
+>weibo:[@hyongbai](http://weibo.com/hyongbai)
+
+>gmail:[@hyongbai](mailto:hyongbai@gmail.com)
 
